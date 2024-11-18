@@ -3,36 +3,36 @@ name: Deploy to IIS
 on:
   push:
     branches:
-      - master  # Deploy when changes are pushed to the main branch
+      - master  # Deploy when changes are pushed to the master branch
 
 jobs:
   deploy:
-    runs-on: self-hosted
+    runs-on: self-hosted  # Use your self-hosted runner
 
     steps:
       # Step 1: Check out the code
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Step 2: Set up .NET
-      - name: Set up .NET Core
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: 7.0  # Update as needed
-
-      # Step 3: Build and Publish the app
+      # Step 2: Build and Publish the app (No need to set up .NET Core since it's already installed on the server)
       - name: Build and Publish
         run: |
-          dotnet publish -c Release -o published
+          dotnet publish -c Release -o published  # Publish the app for deployment
 
-      # Step 4: Deploy to IIS Server
+      # Step 3: Deploy to IIS Server
       - name: Deploy to IIS
-        uses: appleboy/ssh-action@v0.1.2
+        uses: appleboy/ssh-action@v0.1.2  # Use SSH to deploy to the server
         with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          password: ${{ secrets.SERVER_PASSWORD }}
+          host: ${{ secrets.SERVER_HOST }}  # Replace with your IIS server's IP address
+          username: ${{ secrets.SERVER_USER }}  # Username for the server (e.g., Administrator)
+          password: ${{ secrets.SERVER_PASSWORD }}  # Password for the server
           script: |
+            # Backup existing app and deploy the new one
             mkdir -p C:\inetpub\TimeZoneApp\backup
             mv C:\inetpub\TimeZoneApp\* C:\inetpub\TimeZoneApp\backup
-            robocopy.exe .\published C:\inetpub\TimeZoneApp /mir
+            robocopy.exe .\published C:\inetpub\TimeZoneApp /mir  # Copy files to the IIS folder
+
+            # Optionally restart IIS site (if needed)
+            iisreset
+
+            Write-Host "Deployment to IIS completed successfully."
