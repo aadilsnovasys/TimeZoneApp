@@ -6,43 +6,57 @@ on:
       - master
 
 jobs:
-  build-and-deploy:
-    runs-on: self-hosted  
+  build:
+    runs-on: ubuntu-latest  # GitHub hosted runner for build
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 7.0.x
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 7.0.x
 
-    - name: Restore Dependencies
-      run: dotnet restore
+      - name: Restore Dependencies
+        run: dotnet restore
 
-    - name: Build Project
-      run: dotnet publish -c Release -o ./publish
+      - name: Build Project
+        run: dotnet publish -c Release -o ./publish
 
-    - name: Stop IIS Site
-      run: |
-            Import-Module WebAdministration
-            if ((Get-WebAppPoolState -Name "TimeZoneApp").Value -eq "Started") {
-                Stop-WebAppPool -Name "TimeZoneApp"
-            }
-            Stop-Website -Name "TimeZoneApp"
-      shell: pwsh
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: TimeZoneApp-build
+          path: ./publish
 
+  deploy:
+    runs-on: self-hosted  # Your self-hosted runner for deployment
+    needs: build  # Ensure this runs after the build job completes
+    steps:
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: TimeZoneApp-build
 
-    - name: Deploy to IIS
-      run: |
-        $iisPath = "C:\web\TimeZoneApp"
-        Remove-Item -Recurse -Force -Path $iisPath\*
-        Copy-Item -Path ./publish/* -Destination $iisPath -Recurse
-      shell: pwsh
+      - name: Stop IIS Site
+        run: |
+          Import-Module WebAdministration
+          if ((Get-WebAppPoolState -Name "TimeZoneApp").Value -eq "Started") {
+              Stop-WebAppPool -Name "TimeZoneApp"
+          }
+          Stop-Website -Name "TimeZoneApp"
+        shell: pwsh
 
-    - name: Start IIS Site
-      run: |
-        Import-Module WebAdministration
-        Start-WebAppPool -Name "TimeZoneApp"
-        Start-Website -Name "TimeZoneApp"
-      shell: pwsh
+      - name: Deploy to IIS
+        run: |
+          $iisPath = "C:\web\TimeZoneApp"
+          Remove-Item -Recurse -Force -Path $iisPath\*
+          Copy-Item -Path ./publish/* -Destination $iisPath -Recurse
+        shell: pwsh
+
+      - name: Start IIS Site
+        run: |
+          Import-Module WebAdministration
+          Start-WebAppPool -Name "TimeZoneApp"
+          Start-Website -Name "TimeZoneApp"
+        shell: pwsh
