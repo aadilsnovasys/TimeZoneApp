@@ -17,23 +17,22 @@ jobs:
       # Step 2: Build and Publish the app
       - name: Build and Publish
         run: |
-          dotnet publish -c Release -o published  # Publish the app for deployment
+          dotnet publish -c Release -o published
 
-      # Step 3: Deploy to IIS Server
-      - name: Deploy to IIS (Windows Server)
-        uses: appleboy/ssh-action@v0.1.2  # Use SSH to deploy to the server
-        with:
-          host: ${{ secrets.SERVER_HOST }}  # Your server's IP address
-          username: ${{ secrets.SERVER_USER }}  # Username for the server
-          password: ${{ secrets.SERVER_PASSWORD }}  # Password for the server
-          port: 22  # Make sure SSH is running on port 22 or update if needed
-          script: |
-            # Backup existing app and deploy the new one (PowerShell commands for Windows)
-            New-Item -Path "C:\inetpub\TimeZoneApp\backup" -ItemType Directory -Force
-            Move-Item -Path "C:\inetpub\TimeZoneApp\*" -Destination "C:\inetpub\TimeZoneApp\backup" -Force
-            robocopy.exe "C:\actions-runner\_work\TimeZoneApp\published" "C:\inetpub\TimeZoneApp" /mir
+      # Step 3: Deploy using PowerShell (for Windows)
+      - name: Deploy to IIS (PowerShell)
+        shell: pwsh
+        run: |
+          $session = New-PSSession -ComputerName $env:SERVER_HOST -Credential (New-Object System.Management.Automation.PSCredential($env:SERVER_USER, (ConvertTo-SecureString $env:SERVER_PASSWORD -AsPlainText -Force)))
+          Invoke-Command -Session $session -ScriptBlock {
+              # Backup the existing app
+              New-Item -Path "C:\inetpub\TimeZoneApp\backup" -ItemType Directory -Force
+              Move-Item -Path "C:\inetpub\TimeZoneApp\*" -Destination "C:\inetpub\TimeZoneApp\backup" -Force
 
-            # Optionally restart IIS site (if needed)
-            iisreset
+              # Copy the published files
+              robocopy "C:\actions-runner\_work\TimeZoneApp\published" "C:\inetpub\TimeZoneApp" /mir
 
-            Write-Host "Deployment to IIS completed successfully."
+              # Restart IIS (optional)
+              iisreset
+          }
+          Remove-PSSession -Session $session
