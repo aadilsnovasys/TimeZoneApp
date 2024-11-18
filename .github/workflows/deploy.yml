@@ -25,10 +25,13 @@ jobs:
 
     - name: Stop IIS Site
       run: |
-        Import-Module WebAdministration
-        Stop-WebAppPool -Name "TimeZoneApp"
-        Stop-Website -Name "TimeZoneApp"
+            Import-Module WebAdministration
+            if ((Get-WebAppPoolState -Name "TimeZoneApp").Value -eq "Started") {
+                Stop-WebAppPool -Name "TimeZoneApp"
+            }
+            Stop-Website -Name "TimeZoneApp"
       shell: pwsh
+
 
     - name: Deploy to IIS
       run: |
