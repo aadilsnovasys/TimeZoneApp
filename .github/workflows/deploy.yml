@@ -7,30 +7,31 @@ on:
 
 jobs:
   deploy:
-    runs-on: self-hosted  # Use your self-hosted runner
+    runs-on: self-hosted  # Windows runner
 
     steps:
       # Step 1: Check out the code
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Step 2: Build and Publish the app (No need to set up .NET Core since it's already installed on the server)
+      # Step 2: Build and Publish the app
       - name: Build and Publish
         run: |
           dotnet publish -c Release -o published  # Publish the app for deployment
 
       # Step 3: Deploy to IIS Server
-      - name: Deploy to IIS
+      - name: Deploy to IIS (Windows Server)
         uses: appleboy/ssh-action@v0.1.2  # Use SSH to deploy to the server
         with:
-          host: ${{ secrets.SERVER_HOST }}  # Replace with your IIS server's IP address
-          username: ${{ secrets.SERVER_USER }}  # Username for the server (e.g., Administrator)
+          host: ${{ secrets.SERVER_HOST }}  # Your server's IP address
+          username: ${{ secrets.SERVER_USER }}  # Username for the server
           password: ${{ secrets.SERVER_PASSWORD }}  # Password for the server
+          port: 22  # Make sure SSH is running on port 22 or update if needed
           script: |
-            # Backup existing app and deploy the new one
-            mkdir -p C:\inetpub\TimeZoneApp\backup
-            mv C:\inetpub\TimeZoneApp\* C:\inetpub\TimeZoneApp\backup
-            robocopy.exe .\published C:\inetpub\TimeZoneApp /mir  # Copy files to the IIS folder
+            # Backup existing app and deploy the new one (PowerShell commands for Windows)
+            New-Item -Path "C:\inetpub\TimeZoneApp\backup" -ItemType Directory -Force
+            Move-Item -Path "C:\inetpub\TimeZoneApp\*" -Destination "C:\inetpub\TimeZoneApp\backup" -Force
+            robocopy.exe "C:\actions-runner\_work\TimeZoneApp\published" "C:\inetpub\TimeZoneApp" /mir
 
             # Optionally restart IIS site (if needed)
             iisreset
