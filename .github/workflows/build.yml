@@ -24,8 +24,12 @@ jobs:
     - name: Build Project
       run: dotnet publish -c Release -o ./publish
 
+    - name: List contents of publish directory
+      run: |
+        ls -R ./publish  # Verify that the directory exists and has content
+
     - name: Upload build artifact
       uses: actions/upload-artifact@v3
       with:
-        name: TimeZoneApp
-        path: ./publish  # Upload the build output as an artifact
+        name: TimeZoneApp  # This must match the name in deploy.yml
+        path: ./publish  # Upload the publish directory
