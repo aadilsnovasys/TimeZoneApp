@@ -21,7 +21,7 @@ jobs:
 
       # Step 3: Deploy using PowerShell (for Windows)
       - name: Deploy to IIS (PowerShell)
-        shell: pwsh
+        shell: powershell
         run: |
           $session = New-PSSession -ComputerName $env:SERVER_HOST -Credential (New-Object System.Management.Automation.PSCredential($env:SERVER_USER, (ConvertTo-SecureString $env:SERVER_PASSWORD -AsPlainText -Force)))
           Invoke-Command -Session $session -ScriptBlock {
