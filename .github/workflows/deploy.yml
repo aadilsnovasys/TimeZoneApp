@@ -1,0 +1,38 @@
+name: Deploy to IIS
+
+on:
+  push:
+    branches:
+      - master  # Deploy when changes are pushed to the main branch
+
+jobs:
+  deploy:
+    runs-on: windows-latest
+
+    steps:
+      # Step 1: Check out the code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up .NET
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 7.0  # Update as needed
+
+      # Step 3: Build and Publish the app
+      - name: Build and Publish
+        run: |
+          dotnet publish -c Release -o published
+
+      # Step 4: Deploy to IIS Server
+      - name: Deploy to IIS
+        uses: appleboy/ssh-action@v0.1.2
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            mkdir -p C:\inetpub\TimeZoneApp\backup
+            mv C:\inetpub\TimeZoneApp\* C:\inetpub\TimeZoneApp\backup
+            robocopy.exe .\published C:\inetpub\TimeZoneApp /mir
