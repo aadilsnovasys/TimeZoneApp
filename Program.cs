@@ -13,17 +13,17 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+app.UseHttpsRedirection(); // Redirect HTTP to HTTPS, you can remove if not using SSL
 app.UseRouting();
+
+// Use static files (from wwwroot)
+app.UseStaticFiles();  // This enables serving static files (e.g., CSS, JS, images)
 
 app.UseAuthorization();
 
-app.MapStaticAssets();
-
+// Map Controller routes
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
-
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
