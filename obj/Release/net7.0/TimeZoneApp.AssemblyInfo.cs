@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TimeZoneApp")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+386b7add066d27dc6d9d98f01adc2a7d454cbcbe")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e0278e565a082423498db770f8705618dab14d75")]
 [assembly: System.Reflection.AssemblyProductAttribute("TimeZoneApp")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TimeZoneApp")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

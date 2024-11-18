@@ -1,27 +1,24 @@
 name: Deploy TimeZoneApp to IIS
 
 on:
-  push:
-    branches:
-      - master
+  workflow_run:
+    workflows: ["Build TimeZoneApp"]  # Triggered by the successful completion of the build workflow
+    types:
+      - completed
 
 jobs:
-  build-and-deploy:
-    runs-on: self-hosted  
+  deploy:
+    runs-on: self-hosted  # Your self-hosted runner for deployment
+
     steps:
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+    - name: Download build artifact
+      uses: actions/download-artifact@v3
       with:
-        dotnet-version: 7.0.x
-
-    - name: Restore Dependencies
-      run: dotnet restore
-
-    - name: Build Project
-      run: dotnet publish -c Release -o ./publish
+        name: TimeZoneApp  # Download the artifact from the build workflow
+        path: ./publish
 
     - name: Stop IIS Site
       run: |
@@ -32,7 +29,7 @@ jobs:
 
     - name: Deploy to IIS
       run: |
-        $iisPath = "C:\inetpub\TimeZoneApp"
+        $iisPath = "C:\web\TimeZoneApp"
         Remove-Item -Recurse -Force -Path $iisPath\*
         Copy-Item -Path ./publish/* -Destination $iisPath -Recurse
       shell: pwsh
